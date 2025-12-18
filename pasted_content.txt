@@ -1,0 +1,439 @@
+        try:
+            print(f"Making OpenRouter API call to model: {model}")
+            resp = requests.post(
+                "https://openrouter.ai/api/v1/chat/completions",
+                headers=headers,
+                json=body,
+                timeout=60
+            )
+
+            print(f"OpenRouter response status: {resp.status_code}")
+            print(f"OpenRouter response headers: {dict(resp.headers)}")
+            print(f"OpenRouter response text: {resp.text[:500]}...")
+
+            if resp.status_code != 200:
+                return jsonify({
+                    "error": f"OpenRouter API returned {resp.status_code}",
+                    "response": resp.text,
+                    "model": model
+                }), 500
+
+            if not resp.text.strip():
+                return jsonify({
+                    "error": "OpenRouter returned empty response",
+                    "status_code": resp.status_code,
+                    "model": model
+                }), 500
+
+            try:
+                resp_json = resp.json()
+            except json.JSONDecodeError as json_err:
+                return jsonify({
+                    "error": "OpenRouter returned invalid JSON",
+                    "response_text": resp.text,
+                    "json_error": str(json_err),
+                    "model": model
+                }), 500
+
+            if "choices" not in resp_json or not resp_json["choices"]:
+                return jsonify({
+                    "error": "OpenRouter response missing choices",
+                    "response": resp_json,
+                    "model": model
+                }), 500
+
+            ai_reply = resp_json["choices"][0]["message"]["content"]
+
+            # Add the conversation to memory
+            current_conversation = getattr(memory_row, "conversation", "") or ""
+            new_conversation = f"{current_conversation}\nUSER: {user_message}\nBOT: {ai_reply}".strip()
+            update_memory_column(bot_id, "conversation", new_conversation)
+
+        except requests.exceptions.RequestException as req_err:
+            import traceback
+            traceback.print_exc()
+            return jsonify({
+                "error": f"OpenRouter request failed: {str(req_err)}",
+                "model": model,
+                "type": "network_error"
+            }), 500
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return jsonify({
+                "error": f"OpenRouter LLM call failed: {str(e)}",
+                "model": model,
+                "type": "general_error"
+            }), 500
+
+        return jsonify({
+            "reply": ai_reply,
+            "prompt": prompt,
+            "bot_id": bot_id,
+            "model": model,
+            "token_status": token_status
+        })
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+#==== FILE UPLOAD ENDPOINTS ===
+@app.route("/api/upload-png", methods=["POST"])
+@require_api_key
+def upload_png():
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part in request"}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
+
+    if not allowed_file(file.filename):
+        return jsonify({"error": "Invalid file type. Only PNG allowed."}), 400
+
+    filename = secure_filename(file.filename)
+    save_path = os.path.join(UPLOAD_DIR, filename)
+
+    try:
+        file.save(save_path)
+        file_url = f"/uploads/{filename}"
+        return jsonify({"status": "success", "file_url": file_url})
+    except Exception as e:
+        return jsonify({"error": f"Failed to save file: {str(e)}"}), 500
+    
+@app.route('/download/<filename>')
+def download_file(filename):
+    # Sanitize filename
+    safe_filename = secure_filename(filename)
+    file_path = os.path.join(DOWNLOAD_FOLDER, safe_filename)
+
+    # Check if file exists
+    if not os.path.isfile(file_path):
+        abort(404)
+
+    # Send file as attachment
+    return send_file(file_path, as_attachment=True)    
+
+# === COMPLETE EMAIL SERVICES (REPLACE YOUR EXISTING EMAIL FUNCTIONS) ===
+
+@app.route("/worker/send-email", methods=["POST"])
+def send_email():
+    """Send email via SMTP with config from bot memory"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No JSON data provided"}), 400
+            
+        bot_id = data.get("bot_id", "anyBot")
+        to_addr = data.get("to")
+        subject = data.get("subject")
+        body = data.get("body")
+
+        if not all([to_addr, subject, body]):
+            return jsonify({"error": "Missing required fields: to, subject, body"}), 400
+
+        # Validate email format
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(email_pattern, to_addr):
+            return jsonify({"error": "Invalid email address format"}), 400
+
+        # Get email config from bot memory
+        memory_row = get_latest_memory(bot_id)
+        config_text = getattr(memory_row, 'config', '') if memory_row else ""
+
+        # Parse email config
+        smtp_server = None
+        smtp_port = None
+        smtp_user = None
+        smtp_password = None
+        from_email = None
+
+        for line in config_text.splitlines():
+            line_strip = line.strip()
+            if not line_strip or line_strip.startswith('#'):
+                continue
+                
+            if ':' not in line_strip:
+                continue
+                
+            key, value = line_strip.split(":", 1)
+            key = key.strip().lower()
+            value = value.strip()
+            
+            if key == "smtp_server":
+                smtp_server = value
+            elif key == "smtp_port":
+                try:
+                    smtp_port = int(value)
+                except ValueError:
+                    continue
+            elif key == "smtp_user":
+                smtp_user = value
+            elif key == "smtp_password":
+                smtp_password = value
+            elif key == "sent_from_email":
+                from_email = value
+
+        # Fallback to env variables
+        smtp_server = smtp_server or os.getenv("SMTP_SERVER", "smtp.hostinger.com")
+        smtp_port = smtp_port or int(os.getenv("SMTP_PORT", "465"))
+        smtp_user = smtp_user or os.getenv("SMTP_USER")
+        smtp_password = smtp_password or os.getenv("SMTP_PASS")
+        from_email = from_email or smtp_user
+
+        if not all([smtp_server, smtp_port, smtp_user, smtp_password]):
+            return jsonify({
+                "error": "Missing SMTP credentials",
+                "details": {
+                    "smtp_server": bool(smtp_server),
+                    "smtp_port": bool(smtp_port),
+                    "smtp_user": bool(smtp_user),
+                    "smtp_password": bool(smtp_password)
+                }
+            }), 400
+
+        # Create and send email
+        try:
+            msg = EmailMessage()
+            msg["From"] = from_email
+            msg["To"] = to_addr
+            msg["Subject"] = subject
+            msg.set_content(body)
+
+            # Try SSL first (port 465), then TLS (port 587)
+            if smtp_port == 465:
+                with smtplib.SMTP_SSL(smtp_server, smtp_port, timeout=30) as server:
+                    server.login(smtp_user, smtp_password)
+                    server.send_message(msg)
+            elif smtp_port == 587:
+                with smtplib.SMTP(smtp_server, smtp_port, timeout=30) as server:
+                    server.starttls()
+                    server.login(smtp_user, smtp_password)
+                    server.send_message(msg)
+            else:
+                # Try SSL by default
+                with smtplib.SMTP_SSL(smtp_server, smtp_port, timeout=30) as server:
+                    server.login(smtp_user, smtp_password)
+                    server.send_message(msg)
+
+            return jsonify({
+                "status": "success",
+                "from": from_email,
+                "to": to_addr,
+                "subject": subject,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+            
+        except smtplib.SMTPAuthenticationError as e:
+            return jsonify({
+                "status": "error", 
+                "message": f"SMTP Authentication failed: {str(e)}",
+                "error_type": "auth_error"
+            }), 400
+        except smtplib.SMTPException as e:
+            return jsonify({
+                "status": "error", 
+                "message": f"SMTP error: {str(e)}",
+                "error_type": "smtp_error"
+            }), 500
+        except Exception as e:
+            return jsonify({
+                "status": "error", 
+                "message": f"Email sending failed: {str(e)}",
+                "error_type": "general_error"
+            }), 500
+            
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            "status": "error", 
+            "message": f"Server error: {str(e)}",
+            "error_type": "server_error"
+        }), 500
+
+
+@app.route("/worker/check-email", methods=["GET"])
+def check_email():
+    """Check for new emails via IMAP with config from bot memory"""
+    try:
+        bot_id = request.args.get("bot_id", "anyBot")
+        mailbox = request.args.get("mailbox", "INBOX")
+        num_emails = int(request.args.get("limit", "5"))
+
+        # Get email config from bot memory
+        memory_row = get_latest_memory(bot_id)
+        config_text = getattr(memory_row, 'config', '') if memory_row else ""
+
+        # Parse email config
+        imap_server = None
+        imap_port = 993  # Default IMAP SSL port
+        imap_user = None
+        imap_password = None
+
+        for line in config_text.splitlines():
+            line_strip = line.strip()
+            if not line_strip or line_strip.startswith('#'):
+                continue
+                
+            if ':' not in line_strip:
+                continue
+                
+            key, value = line_strip.split(":", 1)
+            key = key.strip().lower()
+            value = value.strip()
+            
+            if key == "imap_server":
+                imap_server = value
+            elif key == "imap_port":
+                try:
+                    imap_port = int(value)
+                except ValueError:
+                    continue
+            elif key == "imap_user":
+                imap_user = value
+            elif key == "imap_password":
+                imap_password = value
+
+        # Fallback to env variables
+        imap_server = imap_server or os.getenv("IMAP_SERVER", "imap.hostinger.com")
+        imap_user = imap_user or os.getenv("IMAP_USER")
+        imap_password = imap_password or os.getenv("IMAP_PASS")
+
+        if not all([imap_server, imap_user, imap_password]):
+            return jsonify({
+                "error": "Missing IMAP credentials",
+                "details": {
+                    "imap_server": bool(imap_server),
+                    "imap_user": bool(imap_user),
+                    "imap_password": bool(imap_password)
+                }
+            }), 400
+
+        try:
+            # Connect to IMAP server
+            mail = imaplib.IMAP4_SSL(imap_server, imap_port)
+            mail.login(imap_user, imap_password)
+            mail.select(mailbox)
+
+            # Search for emails
+            typ, data = mail.search(None, 'ALL')
+            if typ != 'OK':
+                raise Exception("Failed to search emails")
+                
+            mail_ids = data[0].split()
+            if not mail_ids:
+                mail.logout()
+                return jsonify({
+                    "status": "success",
+                    "emails": [],
+                    "account": imap_user,
+                    "count": 0,
+                    "message": "No emails found"
+                })
+
+            # Get latest emails
+            latest_ids = mail_ids[-num_emails:] if len(mail_ids) > num_emails else mail_ids
+            emails = []
+
+            for num in reversed(latest_ids):
+                try:
+                    typ, msg_data = mail.fetch(num, '(RFC822)')
+                    if typ != 'OK' or not msg_data[0]:
+                        continue
+                        
+                    msg = email.message_from_bytes(msg_data[0][1])
+
+                    # Decode subject
+                    subject_header = msg.get("Subject", "No Subject")
+                    if subject_header:
+                        decoded = email.header.decode_header(subject_header)
+                        subject = ""
+                        for part, encoding in decoded:
+                            if isinstance(part, bytes):
+                                subject += part.decode(encoding or 'utf-8', errors='ignore')
+                            else:
+                                subject += part
+                    else:
+                        subject = "No Subject"
+
+                    from_ = msg.get("From", "Unknown Sender")
+                    date_ = msg.get("Date", "Unknown Date")
+                    
+                    # Extract email body
+                    snippet = ""
+                    if msg.is_multipart():
+                        for part in msg.walk():
+                            if part.get_content_type() == "text/plain":
+                                try:
+                                    payload = part.get_payload(decode=True)
+                                    if payload:
+                                        snippet = payload.decode(errors="ignore")[:300]
+                                        break
+                                except:
+                                    continue
+                    else:
+                        try:
+                            payload = msg.get_payload(decode=True)
+                            if payload:
+                                snippet = payload.decode(errors="ignore")[:300]
+                        except:
+                            snippet = "Could not decode message content"
+
+                    emails.append({
+                        "from": from_,
+                        "subject": subject,
+                        "date": date_,
+                        "snippet": snippet.strip()
+                    })
+                except Exception as e:
+                    print(f"Error processing email {num}: {e}")
+                    continue
+
+            mail.logout()
+            
+            return jsonify({
+                "status": "success",
+                "emails": emails,
+                "account": imap_user,
+                "count": len(emails),
+                "mailbox": mailbox
+            })
+            
+        except imaplib.IMAP4.error as e:
+            return jsonify({
+                "status": "error", 
+                "message": f"IMAP error: {str(e)}",
+                "error_type": "imap_error"
+            }), 400
+        except Exception as e:
+            return jsonify({
+                "status": "error", 
+                "message": f"Email check failed: {str(e)}",
+                "error_type": "general_error"
+            }), 500
+            
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            "status": "error", 
+            "message": f"Server error: {str(e)}",
+            "error_type": "server_error"
+        }), 500
+
+
+@app.route("/worker/test-email-config", methods=["GET", "POST"])
+def test_email_config():
+    """Test email configuration without sending actual email - supports both GET and POST"""
+    try:
+        # Handle both GET and POST requests
+        if request.method == "GET":
+            bot_id = request.args.get("bot_id", "anyBot")
+        else:
+            data = request.get_json() or {}
+            bot_id = data.get("bot_id", "anyBot")
+        
+        # Get email config from bot memory
+ 

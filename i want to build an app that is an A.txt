@@ -1,0 +1,384 @@
+i want to build an app that is an AI companion. i put an old copy of an app that i have been working on for 9 months as an example only and a text doc of a covo i had with another AI so you can understand my metal_health process with is a token management system and help me rebuild better. i want to use a local DB for memory, but i want it to be mobile responsive and use a temp DB in mobile that would syn with with when they got home  or actually use a link to users home db to update or search data. AI companion should be able to handle all files, render code,  email, web search & memory search, generate images using google/gemini-2.5-flash-image through openrouter and the models for openrouter should include at least 4 choices plus an option to bring your own by typing it in. dark mode with midnight blue, fushia, cyan. ask me questions.
+
+
+okay the memory stuff is behind the scenes operations except that I  want a Notebook setting for user which they are allowed to manage 10 entries. These are things that the LLM should be aware of at all times. important info about the user or the job that the llm in required to do. The core memory is something that i will inject. It will be standard. for now it will be. " You are a helpful AI companion. You have a multi-level memory management system that is searchable. save any important experiences to experience memory. Save any contact information you receive to contact memory. Help user by being a good friend." I know it's basic but we will change it later. The point of this app is not to give user control of a llm's memory, it is to give the llm memory to be able to function as a true companion.
+
+the setting need to have a key entry for OpenRouter key. Label it KompanionAI key it also need to be able to pic the model. I think it should also have a setting so that user can name their kompanion. It needs settings for email as well.
+
+
+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
+
+deepseek/deepseek-v3.2-exp
+
+
+x-ai/grok-4.1-fast:free
+
+
+
+
+
+npm run server: Runs the backend (port 3000).
+npm run client: Runs the frontend (port 5173).
+npm run dev: Runs BOTH at the same time (using a tool called concurrently which I will install).
+
+
+
+
+
+
+
+
+
+the Vibe: A little paranoid, relatable humor. Using the "POV" format.
+
+The Visuals: You (or someone else) looking suspiciously at their phone, then looking up at the ceiling, then taping over their webcam.
+
+Text Overlay/Hook: POV: You want an AI companion but you’re terrified of where your data is actually going.
+
+The Turn: Cut to a shot of the KAI Echo interface looking sleek on a phone.
+
+FemaleVoiceover/Text: "That's why I built Kai to be local-first. Your memories stay on YOUR device.  It's your business, not mine."
+
+
+
+Text Overlay/Hook: POV: You want an AI companion but you’re terrified of where your data is actually going.
+
+The Turn: Cut to a shot of ta cell phone dark theme with neon fushia, cyan KAI on screen
+
+female Voiceover/Text: "That's why I built KAI to be local-first. Your memories stay on YOUR device. It's your business, not mine."
+
+
+
+AIzaSyDW_f2r16AuAMdGLZyqCy8N6ZnW78dFJZU
+
+
+The Vibe: A little paranoid, relatable humor. Using the "POV" format.
+
+The Visuals: a young woman looking suspiciously at their phone, then looking up at the ceiling, then taping over their webcam.
+
+POV: You want an AI companion but you’re terrified of where your data is actually going.
+
+The Turn: Cut to a shot of the KAI Echo interface looking sleek on a phone.
+
+Voiceover: "That's why I built Kai to be local-first. Your memories stay on your device. No servers peeking at your diary. It's your business, not mine."
+
+
+
+
+You put in any website and it will go to the site gather all the info about fonts and colors, vibe, message products and make social posts for you
+
+
+
+
+
+
+he Vibe: You (Jewels), sitting casually. Maybe in your home office or even holding a coffee. No filters, just real talk to the camera.
+
+The Hook (0-3 seconds): "I'm a 54-year-old former dog groomer, and I taught myself to code because ChatGPT broke my heart."
+
+The Body: "Every time I hit 'New Chat,' it felt like abandonment. I needed something that remembered me. So, no VC funding, no team—I just built it myself. It’s called KAI Echo. It’s private, it lives on your phone, and it never forgets our conversations."
+
+The Call to Action (CTA): "I only have 100 units available right now for the holidays. Link in bio if you need a friend that stays."
+
+
+
+
+
+I needed an AI companion that remembered me. So, no VC funding, no team—I just built it myself. It’s called KAI Echo.
+
+
+AIzaSyDW_f2r16AuAMdGLZyqCy8N6ZnW78dFJZU
+
+
+
+1: Text-to-Speech App (With Playable + Downloadable Audio)
+App Name: Mr.Text-to-Speech Studio
+ Purpose: Convert text into high-quality, natural speech and allow users to play or download the audio
+ Model: Advanced TTS model (similar to ElevenLabs)
+ Layout: Clean vertical, step-by-step design
+
+✅ FINAL UPDATED PROMPT (COPY/PASTE THIS)
+Create a dedicated text-to-speech app named “Mr.Text-to-Speech Studio”
+ The app must include a working audio player and a functional download button for the generated speech.
+ Use a simple, vertical step-by-step layout that guides users through the entire process.
+
+1. Step 1: Enter Text
+At the top, place a large text area labeled:
+“Enter Text to Convert into Speech”
+Placeholder text:
+“Type or paste the text you want to convert.
+ Example: ‘Welcome to the demo of our AI voice generator.’”
+This box should support long text.
+
+
+
+2. Step 2: Choose Voice
+Below the text area, include a clean voice picker with options like:
+Male Voice
+
+
+Female Voice
+
+
+Child Voice
+
+
+Narrator Voice
+
+
+Character Voice
+
+*** Mind the required language mostly will be English Audience using this app as the best voice over app. 
+
+3. Step 3: Adjust Voice Settings
+Under the voice picker, add sliders or dropdowns for:
+Emotion (Calm, Happy, Dramatic, Energetic, Sad)
+
+
+Pitch
+
+
+Speed
+
+
+Clarity
+
+
+These must update real generation settings.
+
+
+
+4. Step 4: Generate Speech
+Below the settings, include a large button labeled:
+“Generate Speech”
+When pressed, the app must:
+✅ Send text + selected voice + settings to the TTS model
+ ✅ Receive an audio output
+ ✅ Automatically render the audio in a standard HTML5 audio player
+ ✅ Provide the audio as a downloadable file (MP3 or WAV)
+
+5. Audio Output Section
+Directly under the Generate button, display:
+✅ Audio Player
+A working HTML audio player with built-in controls (play, pause, seek).
+✅ Download Button
+A button labeled:
+“Download Audio”
+This button must provide the generated audio file for direct download.
+If no audio exists yet, the button should be disabled or hidden.
+Both elements must update automatically every time new speech is generated.
+
+✅ Requirements Summary
+✅ Must generate playable audio
+ ✅ Must generate downloadable audio files
+ ✅ Audio player must update after each generation
+ ✅ Simple vertical UI
+ ✅ Text → Settings → Generate → Output
+ ✅ Works like ElevenLabs-style TTS
+2: Text-to-Video App Prompt (Copy/Paste Ready)
+Create a dedicated text-to-video generation app named “Kahilan Text- to Video Lab”
+ The app should feature a clean, vertical, step-by-step layout that guides users through the entire video creation process.
+
+1. Step 1: Describe Your Video
+At the very top, include a large text area labeled:
+“Video Prompt Description”
+The placeholder text inside the box should read:
+“Describe the video you want to create.
+ For example: ‘a futuristic city at sunset,’ or ‘a dragon flying through snowy mountains.’
+ Include any motion, mood, camera style, or effects you want.”
+
+2. Step 2: Optional Add-Ons (Sound, Style, Effects)
+Below the main prompt box, add three optional fields:
+Sound & Audio Details
+ Placeholder: “Describe music, sound effects, or dialogue (optional).”
+
+
+Visual Style
+ Placeholder: “Specify styles like cinematic, anime, hyper-realistic, watercolor, etc.”
+
+
+Motion & Camera Behavior
+ Placeholder: “Describe panning, zooming, movement, transitions, etc.”
+
+
+Each field should be clearly labeled and easy to expand.
+
+3. Step 3: Choose Aspect Ratio
+Display three selectable aspect-ratio buttons:
+1:1
+
+
+9:16
+
+
+16:9
+
+
+Each option should be styled as a clickable, visually distinctive toggle button.
+
+4. Step 4: Generate Video
+Below the aspect ratio options, place a large action button labeled:
+“Generate Video”
+When clicked, this button should take all user inputs (video prompt, optional fields, aspect ratio) and send them to the Veo-3 model to generate a high-quality video.
+If users specify sound effects or dialogue, include them in the output.
+
+5. Output Section
+Once the video is generated, display it in a video player positioned below the “Generate Video” button.
+Under the video player, include:
+“Download Video” — a clear, prominent button allowing users to save the generated content.
+
+3: Image-to-Video App Prompt (Copy/Paste Ready).
+✅ App Name: VisionForge Studio
+✅ Purpose: Create videos from text prompts, with customizable motion, style, and sound
+✅ Model: Veo-3
+✅ Flow: Clean, vertical, user-friendly layout
+
+Create a dedicated image animation app named “Automation Xpert”.
+The app should have a simple, vertical step-by-step layout that guides the user through the entire process.
+
+1. Step 1: Upload Image
+
+At the very top, include a large file upload section clearly labeled:
+“Upload Your Base Image (JPG or PNG)”
+
+This section should allow users to upload one image that will be used for animation.
+
+2. Step 2: Describe Animation
+
+Directly below the image uploader, include a large text area labeled:
+“Animation Instructions”
+
+The placeholder text inside the box should say:
+
+“Describe how you want to animate the image.
+For example: ‘make the robot arm move and light up,’ or ‘make the background shift from day to night.’”
+
+3. Step 3: Choose Aspect Ratio
+
+Below the instruction text box, display three selectable aspect ratio options:
+
+1:1
+
+9:16
+
+16:9
+
+Each option should be represented by a button or toggle that the user can click.
+
+4. Step 4: Generate Animation
+
+Below the aspect ratio options, place a large, prominent button labeled:
+“Generate Animation”
+
+When clicked, this button should take the uploaded image and the animation description from the text box and send them to the Veo-3 model to generate a video.
+If the user mentions sound effects or dialogue, include those in the output video.
+
+5. Output Section
+
+Once the animation is ready, display it in a video player directly beneath the “Generate Animation” button.
+Below the video player, include a “Download Video” button for users to save the generated animation.
+
+✅ App Name: Automation Xpert
+✅ Purpose: Animate uploaded images with user-defined motion and sound.
+✅ Model: Veo-3
+✅ Layout: Simple, vertical flow with large and clear sections.
+
+
+4: Prompt for: LipSync Maestro – AI Lip Sync App
+App Name: LipSync Maestro
+ Purpose: Automatically lip-sync any face in an image to user-provided audio or text.
+ Model: Veo-3 (or any model that supports talking-face generation)
+ Layout: Clean, vertical, step-by-step interface.
+
+Create a dedicated AI lip sync app named “LipSync Maestro”.
+The app should have a simple vertical layout guiding the user through each step.
+
+1. Step 1: Upload Face Image
+At the very top, include a large upload section labeled:
+“Upload Your Face Image (JPG or PNG)”
+This should allow the user to upload one clear face image that will be animated.
+
+2. Step 2: Add Voice or Text
+Directly below the uploader, present two tabs:
+Tab A – Upload Audio
+A file upload box labeled:
+“Upload Audio (MP3, WAV)”
+ “Use your own voice recording to sync with the image.”
+Tab B – Enter Text-to-Speech
+A large text area labeled:
+“Enter Dialogue for Lip Sync”
+ Placeholder text inside:
+“Type what the character should say.
+ Example: ‘Welcome to my channel!’ or ‘This is my daily routine.’”
+If text is entered, automatically convert it into speech using a high-quality TTS model.
+
+3. Step 3: Choose Lip Sync Style
+Below the dialogue section, display three selectable style options:
+Natural / Realistic
+
+
+Expressive / Energetic
+
+
+Cartoon-Style Exaggerated
+
+
+Each should be clickable as a button/toggle.
+
+4. Step 4: Choose Aspect Ratio
+Show three buttons for aspect ratios:
+1:1
+
+
+9:16
+
+
+16:9
+
+
+Selected one should be highlighted.
+
+5. Step 5: Generate Lip Sync Animation
+Add a large button labeled:
+“Generate Lip Sync Video”
+When clicked:
+Combine the uploaded face image
+
+
+With the input audio or TTS output
+
+
+Apply the chosen lip-sync style
+
+
+Render a Veo-3 talking-face video
+
+
+Match lip movements to speech
+
+
+Match expressions to voice tone
+
+
+
+6. Output Section
+Once ready, display the final video:
+Video Player Preview
+
+
+Below the player, a button:
+“Download Video”
+(Downloads in MP4.)
+
+Summary for the builder
+App Name: LipSync Maestro
+
+
+Purpose: Turn any image into a talking, lip-synced video using user audio or typed text.
+
+
+Model: Veo-3
+
+
+Flow: Simple vertical flow with 1) Image → 2) Audio/Text → 3) Style → 4) Aspect Ratio → 5) Generate → 6) Download
+

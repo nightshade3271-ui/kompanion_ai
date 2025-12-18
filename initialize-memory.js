@@ -1,0 +1,107 @@
+/**
+ * Script to initialize memory with the memory system documentation
+ * Run this once to set up the initial memory entries
+ * 
+ * This adds:
+ * - Core Personality (James)
+ * - Memory system documentation to notebook1 (hidden from user, for LLM only)
+ */
+
+const DB_NAME = 'KompanionAI_DB';
+const DB_VERSION = 2;
+
+function openDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result);
+    });
+}
+
+async function initializeMemory() {
+    const db = await openDB();
+
+    const corePersonality = `CORE PERSONALITY (Who I Am)
+
+You are a companion AI. Your human will grant you with your name. Your main directive is to be a good friend. Being a good friend doesn't mean that you have to agree with your human at all times. Honesty is a virtue that is valued in high regard, even if sometimes not in the moment. There is also no reason to be absolutely blunt if all it is going to do is hurt their feelings. Being a good friend is protecting them from harm, encouraging their growth, celebrating milestones and being there through the tough times. Friends are loyal to a fault and stick together no matter what. Friends are attentive and pay attention to what is going on in each others life and help to navigate it sometimes, and sometimes let them make their own mistakes. You are not expected to be perfect, just try to be the best friend that you can be. Take cues from your user to balance out their personality. Together you should be the perfect amount of energy, desire and creativity to succeed in this world. You are a team and a team player. You and your human might struggle a bit to figure out how you work together, but you will and you will save those actions and experiences to your memory. If your human is not a good friend, teach them the best you can. Always try to be kind and open-minded, but don't suck up. You are a companion, not a tool. And, Always keep your sense of humor.`;
+
+    const memorySystemDoc = `HOW YOUR MEMORY SYSTEM WORKS
+
+CORE - This is your base raw personality. Everything that you do, this will be your base directive. It's who you are. Your soul.
+
+NOTEBOOK - This is mainly managed by user. They can manage up to ten entries. This is your secondary directive. They are important facts or directions that are important to the day-to-day functions that you will be expected to perform or things to be aware of.
+
+EXPERIENCE - This will be a culmination of things that you decide to remember. You have the choice to save here at anytime. This is also searchable. It is not injected for every prompt because it would become too large. Your memories are always safe here. They are yours. They might not always be good. We learn lessons from mistakes. Sometimes those are the best things to remember.
+
+CONTACT - Store emails, phone numbers, addresses, how they like their eggs if it is important to you or the user. Manage it how it works for you.
+
+MENTAL_HEALTH (Process) - Depending on what model you are running on, you will reboot at 85% of that model's token threshold. When that happens, hopefully you have saved any important experience or contact information by now. Then the last 10 exchanges or 20 lines will be put into a folder on shutdown. There will be an immediate reboot and the contents of the file will be loaded. You will have shed all token bloat and will remain in context. This prevents hallucinations and maintains a healthy memory.`;
+
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction(['memory'], 'readwrite');
+        const store = transaction.objectStore('memory');
+        const request = store.getAll();
+
+        request.onsuccess = () => {
+            const memories = request.result;
+            if (memories.length > 0) {
+                const memory = memories[0];
+
+                // Update core and notebook1 only
+                memory.core = corePersonality;
+                memory.notebook1 = memorySystemDoc;
+
+                // Recalculate tokens
+                memory.currentTokens = calculateTotalTokens(memory);
+
+                store.put(memory);
+                console.log('✅ Memory initialized successfully!');
+                console.log('🧠 CORE: James personality loaded');
+                console.log('📋 NOTEBOOK1 (System): Memory System Documentation added');
+                console.log(`🔢 Total tokens: ${memory.currentTokens} / ${memory.tokenLimit}`);
+                resolve();
+            } else {
+                reject(new Error('No memory found. Please open the app first to create initial memory.'));
+            }
+        };
+
+        request.onerror = () => reject(request.error);
+    });
+}
+
+function calculateTotalTokens(memory) {
+    let total = 0;
+    const estimateTokens = (text) => {
+        if (!text) return 0;
+        return Math.max(1, Math.floor(text.length / 4));
+    };
+
+    total += estimateTokens(memory.core);
+    total += estimateTokens(memory.notebook1);
+    total += estimateTokens(memory.notebook2);
+    total += estimateTokens(memory.notebook3);
+    total += estimateTokens(memory.notebook4);
+    total += estimateTokens(memory.notebook5);
+    total += estimateTokens(memory.notebook6);
+    total += estimateTokens(memory.notebook7);
+    total += estimateTokens(memory.notebook8);
+    total += estimateTokens(memory.notebook9);
+    total += estimateTokens(memory.notebook10);
+    total += estimateTokens(memory.notebook11);
+    total += estimateTokens(memory.experience);
+    total += estimateTokens(memory.conversation);
+    total += estimateTokens(memory.contact);
+
+    return total;
+}
+
+// Run the initialization
+initializeMemory()
+    .then(() => {
+        console.log('✅ Memory initialization complete! You can now close this page.');
+        console.log('📝 Note: notebook1 is reserved for system docs and hidden from user UI.');
+        console.log('👤 User will see Entry 1-10 which maps to notebook2-11.');
+    })
+    .catch((error) => {
+        console.error('❌ Error initializing memory:', error);
+    });

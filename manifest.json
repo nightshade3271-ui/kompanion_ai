@@ -1,0 +1,20 @@
+{
+  "name": "KompanionAI (KAI) - Echo Model",
+  "short_name": "KompanionAI",
+  "description": "Your AI companion that never forgets. Local-first, private, and always with you.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1a2e",
+  "theme_color": "#00e1c7",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "utilities", "lifestyle"],
+  "screenshots": []
+}
